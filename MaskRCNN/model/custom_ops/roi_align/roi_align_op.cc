@@ -120,7 +120,7 @@ REGISTER_OP("ROIAlignV2Grad")
       return Status::OK();
     });
 
-REGISTER_OP("GenerateBoundingBoxProposals")
+REGISTER_OP("GenerateBoundingBoxProposalsV1")
     .Input("scores: float")
     .Input("bbox_deltas: float")
     .Input("image_info: float")

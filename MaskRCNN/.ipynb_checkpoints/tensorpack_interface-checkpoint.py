@@ -400,8 +400,8 @@ def launch_train_with_config(config):
 
     # Special treatment for the eval callback
     if config.callbacks:
-        config.callbacks[6].build_graph_func = _build_graph_get_cost
-        config.callbacks[6].inputs_desc = inputs_desc
+        config.callbacks[4].build_graph_func = _build_graph_get_cost
+        config.callbacks[4].inputs_desc = inputs_desc
 
     # Setup inputs
     assert not input.setup_done()

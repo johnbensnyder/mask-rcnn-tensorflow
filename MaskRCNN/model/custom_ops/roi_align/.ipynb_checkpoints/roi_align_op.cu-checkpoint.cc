@@ -1900,9 +1900,9 @@ class BoxIntersectionOverUnion : public tensorflow::OpKernel {
 // into multiple ops or need to be executed with ThenExecute() but that will
 // slow down other events since execution will be done by event polling thread.
 
-class GenerateBoundingBoxProposals : public tensorflow::AsyncOpKernel {
+class GenerateBoundingBoxProposalsV1 : public tensorflow::AsyncOpKernel {
  public:
-  explicit GenerateBoundingBoxProposals(
+  explicit GenerateBoundingBoxProposalsV1(
       tensorflow::OpKernelConstruction* context)
       : AsyncOpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("spatial_scale", &spatial_scale_));
@@ -2405,11 +2405,11 @@ template struct functor::ROIAlign<GPUDevice, float>;
 // template struct functor::ROIAlignGradV2<GPUDevice, float>;
 // template struct functor::ROIAlignV2<GPUDevice, float>;
 REGISTER_KERNEL_BUILDER(
-    Name("GenerateBoundingBoxProposals").Device(tensorflow::DEVICE_GPU),
-    tensorflow::mlperf::GenerateBoundingBoxProposals)
+    Name("GenerateBoundingBoxProposalsV1").Device(tensorflow::DEVICE_GPU),
+    tensorflow::mlperf::GenerateBoundingBoxProposalsV1);
 REGISTER_KERNEL_BUILDER(
     Name("GenerateBoundingBoxProposalsV2").Device(tensorflow::DEVICE_GPU),
-    tensorflow::mlperf::GenerateBoundingBoxProposalsV2)
+    tensorflow::mlperf::GenerateBoundingBoxProposalsV2);
 REGISTER_KERNEL_BUILDER(Name("ROIAlignV2").Device(tensorflow::DEVICE_GPU),
                         tensorflow::mlperf::ROIAlignOpV2);
 REGISTER_KERNEL_BUILDER(Name("ROIAlignV2Grad").Device(tensorflow::DEVICE_GPU),
