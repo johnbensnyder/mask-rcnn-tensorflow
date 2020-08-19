@@ -9,10 +9,15 @@ import tensorflow.compat.v1 as tf
 from tensorpack_models import Conv2D, FixedUnPooling, MaxPooling, layer_register
 from tensorpack_tfutils import argscope, under_name_scope, add_moving_summary
 
+from model.custom_ops.roi_align import _roi_align_op_grad
 from model.backbone import GroupNorm
 from config import config as cfg
 from utils.box_ops import area as tf_area
 from utils.mixed_precision import mixed_precision_scope
+
+module = '/workspace/shared_workspace/tensorpack/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
+
+gen_custom_op = tf.load_op_library(module)
 
 @layer_register(log_shape=True)
 def fpn_model(features, seed_gen, fp16=False):
@@ -127,7 +132,7 @@ def multilevel_roi_align(features, rcnn_boxes, resolution):
             boxes = tf.concat((boxes[:,:1], boxes[:,1:] - 0.5*cfg.FPN.ANCHOR_STRIDES[i]), axis=1)
 
             # This is a custom tensorflow op for doing ROI align. See CODEBASE.md for more info
-            roi_feature_maps = tf.roi_align(featuremap,
+            roi_feature_maps = gen_custom_op.roi_align(featuremap,
                                             boxes,
                                             pooled_height=resolution,
                                             pooled_width=resolution,

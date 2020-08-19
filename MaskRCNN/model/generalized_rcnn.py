@@ -3,6 +3,7 @@
 import six
 assert six.PY3, "FasterRCNN requires Python 3!"
 import tensorflow.compat.v1 as tf
+import tensorflow as tf2
 import math
 
 from tensorpack_tfutils import add_moving_summary, get_current_tower_context
@@ -84,6 +85,7 @@ class DetectionModel(ModelDesc):
         #    opt = optimizer.AccumGradOptimizer(opt, 8 // cfg.TRAIN.NUM_GPUS)
         if cfg.TRAIN.GRADIENT_CLIP != 0:
             opt = GradientClipOptimizer(opt, cfg.TRAIN.GRADIENT_CLIP)
+        opt = tf.train.experimental.enable_mixed_precision_graph_rewrite(opt, loss_scale='dynamic')
         return opt
 
     def get_inference_tensor_names(self):
@@ -117,7 +119,9 @@ class DetectionModel(ModelDesc):
         head_losses = self.roi_heads(image, features, proposal_boxes, targets, inputs, seed_gen)
 
         if self.training:
-            wd_cost = regularize_cost('.*/W', tf.contrib.layers.l2_regularizer(cfg.TRAIN.WEIGHT_DECAY), name='wd_cost')
+            #wd_cost = regularize_cost('.*/W', tf.contrib.layers.l2_regularizer(cfg.TRAIN.WEIGHT_DECAY), name='wd_cost')
+            wd_cost = regularize_cost('.*/W', tf2.keras.regularizers.l2(cfg.TRAIN.WEIGHT_DECAY),
+                                      name='wd_cost')
             total_cost = tf.add_n(rpn_losses + head_losses + [wd_cost], 'total_cost')
             #total_cost = print_runtime_tensor('COST ', total_cost, prefix=f'rank{hvd.rank()}')
             add_moving_summary(total_cost, wd_cost)

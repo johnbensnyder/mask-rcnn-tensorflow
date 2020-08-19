@@ -375,7 +375,7 @@ class ShareSessionThread(threading.Thread):
             yield None
 
     def start(self):
-        import tensorflow as tf
+        import tensorflow.compat.v1 as tf
         self._sess = tf.get_default_session()
         super(ShareSessionThread, self).start()
 
@@ -705,7 +705,7 @@ def get_num_gpu():
 
     def warn_return(ret, message):
         try:
-            import tensorflow as tf
+            import tensorflow.compat.v1 as tf
         except ImportError:
             return ret
 

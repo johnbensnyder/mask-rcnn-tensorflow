@@ -12,6 +12,10 @@ from config import config as cfg
 from model_box import clip_boxes
 from utils.mixed_precision import mixed_precision_scope
 
+module = '/workspace/shared_workspace/tensorpack/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
+
+gen_custom_op = tf.load_op_library(module)
+
 @layer_register(log_shape=True)
 @auto_reuse_variable_scope
 def rpn_head(featuremap, channel, num_anchors, seed_gen, fp16=False):
@@ -205,23 +209,15 @@ def generate_fpn_proposals(multilevel_anchor_boxes,
                 #
                 # roi: (# boxes for a single level) x 5, the 5 colunms arranged as: batch_index, x_1, y_1, x_2, y_2
                 # rois_probs: 1-D, # boxes for a single level
-                '''rois, rois_probs = tf.generate_bounding_box_proposals(scores,
-                                                                   bbox_deltas,
-                                                                   im_info,
-                                                                   single_level_anchor_boxes,
-                                                                   spatial_scale=1.0 / cfg.FPN.ANCHOR_STRIDES[lvl],
-                                                                   pre_nms_topn=fpn_nms_topk,
-                                                                   post_nms_topn=fpn_nms_topk,
-                                                                   nms_threshold=cfg.RPN.PROPOSAL_NMS_THRESH,
-                                                                   min_size=cfg.RPN.MIN_SIZE)'''
-                rois, rois_probs = tf2.image.generate_bounding_box_proposals(scores,
-                                                                             bbox_deltas,
-                                                                             im_info,
-                                                                             single_level_anchor_boxes,
-                                                                             nms_threshold=cfg.RPN.PROPOSAL_NMS_THRESH,
-                                                                             pre_nms_topn=fpn_nms_topk,
-                                                                             min_size=cfg.RPN.MIN_SIZE,
-                                                                             post_nms_topn=fpn_nms_topk)
+                rois, rois_probs = gen_custom_op.generate_bounding_box_proposals_v1(scores,
+                                                        bbox_deltas,
+                                                        im_info,
+                                                        single_level_anchor_boxes,
+                                                        spatial_scale=1.0 / cfg.FPN.ANCHOR_STRIDES[lvl],
+                                                        pre_nms_topn=fpn_nms_topk,
+                                                        post_nms_topn=fpn_nms_topk,
+                                                        nms_threshold=cfg.RPN.PROPOSAL_NMS_THRESH,
+                                                        min_size=cfg.RPN.MIN_SIZE)                                                    
                 # rois_probs = print_runtime_shape(f'rois_probs, lvl {lvl}', rois_probs, prefix=bug_prefix)
                 all_boxes.append(rois)
                 all_scores.append(rois_probs)
@@ -282,8 +278,6 @@ def generate_fpn_proposals_topk_per_image(multilevel_anchor_boxes,
                 with tf.name_scope(f'Lvl{lvl}'):
                     tf.print(orig_images_hw)
                     im_info = tf.cast(orig_images_hw[i:(i + 1)], tf.float32)
-                    tf.print(im_info)
-                    im_info = tf.pad(im_info, tf.constant([[0,0],[0, 3]]))
                     # h, w
 
                     scores = multilevel_label_logits[lvl][i:(i + 1)]
@@ -291,26 +285,25 @@ def generate_fpn_proposals_topk_per_image(multilevel_anchor_boxes,
 
                     single_level_anchor_boxes = multilevel_anchor_boxes[lvl]
                     single_level_anchor_boxes = tf.reshape(single_level_anchor_boxes, (-1, 4))
+                    '''tf.print(tf.rank(scores))
+                    tf.print(scores)
+                    tf.print(bbox_deltas)
+                    tf.print(tf.rank(bbox_deltas))
+                    tf.print(im_info)
+                    tf.print(tf.rank(im_info))'''
 
                     # https://caffe2.ai/docs/operators-catalogue.html#generateproposals
-                    '''rois, rois_probs = tf.generate_bounding_box_proposals(scores,
-                                                                          bbox_deltas,
-                                                                          im_info,
-                                                                          single_level_anchor_boxes,
-                                                                          spatial_scale=1.0 / cfg.FPN.ANCHOR_STRIDES[
+                    rois, rois_probs = gen_custom_op.generate_bounding_box_proposals_v1(scores,
+                                                        bbox_deltas,
+                                                        im_info,
+                                                        single_level_anchor_boxes,
+                                                        spatial_scale=1.0 / cfg.FPN.ANCHOR_STRIDES[
                                                                               lvl],
-                                                                          pre_nms_topn=fpn_nms_topk,
-                                                                          post_nms_topn=fpn_nms_topk,
-                                                                          nms_threshold=cfg.RPN.PROPOSAL_NMS_THRESH,
-                                                                          min_size=cfg.RPN.MIN_SIZE)'''
-                    rois, rois_probs = tf2.image.generate_bounding_box_proposals(scores,
-                                                                             bbox_deltas,
-                                                                             im_info,
-                                                                             single_level_anchor_boxes,
-                                                                             nms_threshold=cfg.RPN.PROPOSAL_NMS_THRESH,
-                                                                             pre_nms_topn=fpn_nms_topk,
-                                                                             min_size=cfg.RPN.MIN_SIZE,
-                                                                             post_nms_topn=fpn_nms_topk)
+                                                        pre_nms_topn=fpn_nms_topk,
+                                                        post_nms_topn=fpn_nms_topk,
+                                                        nms_threshold=cfg.RPN.PROPOSAL_NMS_THRESH,
+                                                        min_size=cfg.RPN.MIN_SIZE)
+                    
 
                     # rois_probs = print_runtime_shape(f'rois_probs, lvl {lvl}', rois_probs, prefix=bug_prefix)
                     all_boxes.append(tf.concat((i + rois[:, :1], rois[:, 1:]), axis=1))
