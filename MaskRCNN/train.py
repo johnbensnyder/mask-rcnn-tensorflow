@@ -307,20 +307,23 @@ if __name__ == '__main__':
 
 
         callbacks = [
-            PeriodicCallback(
-                ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
-                every_k_epochs=20),
             # linear warmup
             ScheduledHyperParamSetter(
                 'learning_rate', warmup_schedule, interp='linear', step_based=True),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
-            PeakMemoryTracker(),
             EstimatedTimeLeft(median=True),
             SessionRunTimeout(60000).set_chief_only(True),   # 1 minute timeout
         ]
+        
+        '''
+        PeriodicCallback(
+                ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
+                every_k_epochs=20),
+        PeakMemoryTracker(), 
+        '''
 
         callbacks.extend([
-            EvalCallback(dataset, *MODEL.get_inference_tensor_names(), args.logdir, 1, async=args.async_eval) #cfg.TRAIN.BATCH_SIZE_PER_GPU)
+            EvalCallback(dataset, *MODEL.get_inference_tensor_names(), args.logdir, 1, a_sync=args.async_eval) #cfg.TRAIN.BATCH_SIZE_PER_GPU)
             for dataset in cfg.DATA.VAL
         ])
 
@@ -329,13 +332,8 @@ if __name__ == '__main__':
                                            args.images_per_epoch,
                                            trigger_every_n_steps=args.throughput_log_freq,
                                            log_fn=logger.info))
-
-        if args.tfprof:
-            # We only get tf profiling chrome trace on rank==0
-            if hvd.rank() == 0:
-                callbacks.append(EnableCallbackIf(
-                    GraphProfiler(dump_tracing=True, dump_event=True),
-                    lambda self: self.trainer.global_step >= args.tfprof_start_step and self.trainer.global_step <= args.tfprof_end_step))
+        
+        
 
         if is_horovod and hvd.rank() > 0:
             session_init = None

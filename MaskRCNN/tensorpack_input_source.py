@@ -233,7 +233,7 @@ class QueueInput(FeedfreeInput):
         with self.cached_name_scope():
             if self.queue is None:
                 self.queue = tf.FIFOQueue(
-                    50, [x.dtype for x in self._input_placehdrs],
+                    16, [x.dtype for x in self._input_placehdrs],
                     name='input_queue')
             logger.info("Setting up the queue '{}' for CPU prefetching ...".format(self.queue.name))
             self.thread = EnqueueThread(self.queue, self._inf_ds, self._input_placehdrs)

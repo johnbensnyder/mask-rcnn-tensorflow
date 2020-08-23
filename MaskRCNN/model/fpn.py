@@ -15,7 +15,7 @@ from config import config as cfg
 from utils.box_ops import area as tf_area
 from utils.mixed_precision import mixed_precision_scope
 
-module = '/workspace/shared_workspace/tensorpack/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
+module = '/workspace/shared_workspace/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
 
 gen_custom_op = tf.load_op_library(module)
 
