@@ -748,7 +748,9 @@ class SessionUpdate(object):
                     else:
                         assert vartype == val.dtype, msg
         try:
-            var.load(val)
+            # change for tf2 assign is around 1000x faster
+            # var.load(val)
+            var.assign(val)
         except tf.errors.InvalidArgumentError:
             logger.exc("Cannot load this value to the variable {}".format(name))
 

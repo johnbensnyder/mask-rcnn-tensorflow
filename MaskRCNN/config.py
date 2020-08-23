@@ -7,6 +7,7 @@ import numpy as np
 import os
 import six
 import pprint
+from datetime import datetime
 
 import tensorpack_logger as logger
 from tensorpack_utils import get_num_gpu
@@ -215,6 +216,10 @@ _C.TEST.RESULT_SCORE_THRESH_VIS = 0.3   # only visualize confident results
 _C.TEST.RESULTS_PER_IM = 100
 _C.TEST.BOX_TARGET = 0.377
 _C.TEST.MASK_TARGET = 0.339
+
+# Profiler location
+now = str(datetime.now()).split('.')[0].replace(' ','_')
+_C.PROFILER.DIR = "/workspace/shared_workspace/logs/profiler_{0}".format(now)
 
 _C.freeze()  # avoid typo / wrong config keys
 

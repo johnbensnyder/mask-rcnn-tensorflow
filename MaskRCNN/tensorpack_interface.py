@@ -13,7 +13,7 @@ import tensorpack_logger as logger
 from tensorpack_callbacks import Callback, Callbacks, Monitors, MonitorBase, MaintainStepCounter
 from tensorpack_utils import humanize_time_delta
 from tensorpack_train import DEFAULT_MONITORS, TrainConfig
-from tensorpack_tfutils import FilterNoneGrad, JustCurrentSession
+from tensorpack_tfutils import FilterNoneGrad, JustCurrentSession, backup_collection
 from tabulate import tabulate
 from config import config as cfg
 
@@ -82,7 +82,7 @@ def _make_get_grad_fn(input, get_cost_fn, get_opt_fn, XLA_COMPILE=False):
         if not XLA_COMPILE:
             return compute_grad_from_inputs(*inputs)
         else:
-            from tensorflow.contrib.compiler import xla
+            from tensorflow.python.compiler.xla import xla
 
             def xla_func():
                 grads = compute_grad_from_inputs(*inputs)
@@ -93,7 +93,7 @@ def _make_get_grad_fn(input, get_cost_fn, get_opt_fn, XLA_COMPILE=False):
 
             grads_no_vars = xla.compile(xla_func)
             if ctx.has_own_variables:
-                varlist = ctx.get_collection_in_tower(tf.GraphKeys.TRAINABLE_VARIABLES)
+                varlist = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
             else:
                 varlist = tf.trainable_variables()
             return list(zip(grads_no_vars, varlist))
@@ -409,7 +409,7 @@ def launch_train_with_config(config):
 
     # Setup graph
     with TrainContext(''):
-        grads = _make_get_grad_fn(input, _build_graph_get_cost, get_opt_fn)()
+        grads = _make_get_grad_fn(input, _build_graph_get_cost, get_opt_fn, XLA_COMPILE=False)()
         grads = allreduce(grads)
 
         opt = get_opt_fn()

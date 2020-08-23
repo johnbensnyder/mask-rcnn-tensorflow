@@ -261,7 +261,7 @@ def generate_fpn_proposals_topk_per_image(multilevel_anchor_boxes,
     assert len(multilevel_label_logits) == num_lvl
     orig_images_hw = orig_image_dims[:, :2]
 
-    training = get_current_tower_context().is_training
+    training = True # get_current_tower_context().is_training
     all_boxes = []
     all_scores = []
     if cfg.FPN.PROPOSAL_MODE == 'Level':

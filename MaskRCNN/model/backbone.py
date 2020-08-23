@@ -6,6 +6,8 @@
 import numpy as np
 from contextlib import ExitStack, contextmanager, suppress
 import tensorflow.compat.v1 as tf
+import tensorflow as tf2
+from tensorflow.python.compiler.xla import xla
 
 from tensorpack_models import BatchNorm, Conv2D, MaxPooling, layer_register
 from tensorpack_tfutils import argscope, auto_reuse_variable_scope, custom_getter_scope, freeze_variables
@@ -118,9 +120,10 @@ def get_norm(zero_init=False):
 
     def norm(x):
         dtype = x.dtype
-        x = tf.cast(x, tf.float32)
+        #x = tf.cast(x, tf.float32)
         x = Norm(layer_name, x, gamma_initializer=tf.zeros_initializer() if zero_init else None)
-        return tf.cast(x, dtype)
+        #return tf.cast(x, dtype)
+        return x
 
     return norm
     #return lambda x: Norm(layer_name, x, gamma_initializer=tf.zeros_initializer() if zero_init else None)
@@ -171,7 +174,6 @@ def resnet_group(name, l, block_func, features, count, stride, seed_gen):
             with tf.variable_scope('block{}'.format(i)):
                 l = block_func(l, features, stride if i == 0 else 1, seed_gen)
     return l
-
 
 def resnet_c4_backbone(image, num_blocks, seed_gen):
     assert len(num_blocks) == 3

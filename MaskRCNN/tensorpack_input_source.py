@@ -247,6 +247,7 @@ class QueueInput(FeedfreeInput):
         self.thread.pause()     # pause enqueue
 
         opt = tf.RunOptions()
+        # trying increasing from 2 to 50 for xla
         opt.timeout_in_ms = 2000   # 2s
         sess = tf.get_default_session()
         # dequeue until empty
