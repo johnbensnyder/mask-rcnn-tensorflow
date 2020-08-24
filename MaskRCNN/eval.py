@@ -60,7 +60,6 @@ def _scale_box(box, scale):
     scaled_box[3] = y_c + h_half
     return scaled_box
 
-@jit
 def _paste_mask(box, mask, shape):
     """
     Args:

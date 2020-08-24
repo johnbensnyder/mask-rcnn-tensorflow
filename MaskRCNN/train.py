@@ -26,7 +26,8 @@ from tensorpack_train import TrainConfig
 from tensorpack_interface import launch_train_with_config
 from tensorpack_callbacks import PeriodicCallback, EnableCallbackIf, ModelSaver,\
                                  GraphProfiler, PeakMemoryTracker, EstimatedTimeLeft, SessionRunTimeout, \
-                                 MovingAverageSummary, ProgressBar, MergeAllSummaries, RunUpdateOps, ScheduledHyperParamSetter
+                                 MovingAverageSummary, ProgressBar, MergeAllSummaries, RunUpdateOps, \
+                                 ScheduledHyperParamSetter, PerformanceProfiler
 import tensorpack_logger as logger
 
 
@@ -333,7 +334,9 @@ if __name__ == '__main__':
                                            trigger_every_n_steps=args.throughput_log_freq,
                                            log_fn=logger.info))
         
-        
+        if hvd.rank()==0:
+            profiler_dir = os.path.join(cfg.PROFILER.DIR, "rank_{0}".format(hvd.local_rank()))
+            callbacks.append(PerformanceProfiler(profiler_dir, start_step=1024, end_step=1096))
 
         if is_horovod and hvd.rank() > 0:
             session_init = None

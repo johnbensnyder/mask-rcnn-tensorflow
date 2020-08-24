@@ -8,7 +8,7 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import sparse_ops
 import os
 
-module = '/workspace/shared_workspace/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
+module = '/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
 
 gen_roi_align_op = tf.load_op_library(module)
 

@@ -11,7 +11,7 @@ mpirun --allow-run-as-root \
     --mca oob_tcp_if_include ens5 \
     --mca btl_tcp_if_include ens5 \
     -x NCCL_DEBUG=INFO \
-    -x NCCL_TREE_THRESHOLD=0 \
+    -x NCCL_ALGO=Tree,Ring,Collnet \
     -x NCCL_MIN_NRINGS=8 \
     -x TENSORPACK_FP16=1 \
     -x TF_CUDNN_USE_AUTOTUNE=0 \
@@ -39,7 +39,7 @@ mpirun --allow-run-as-root \
     RPN.TOPK_PER_IMAGE=True \
     PREPROC.PREDEFINED_PADDING=False \
     BACKBONE.WEIGHTS=/workspace/shared_workspace/data/weights/ImageNet-R50-AlignPadding.npz \
-    BACKBONE.NORM=SyncBN \ #FreezeBN 
+    BACKBONE.NORM=FreezeBN \
     TRAIN.WARMUP_INIT_LR=0.000416666666667 \
     FRCNN.BBOX_REG_WEIGHTS='[20., 20., 10., 10.]' \
     TRAINER=horovod

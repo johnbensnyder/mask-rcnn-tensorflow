@@ -2,7 +2,7 @@ NUM_GPU=1
 BATCH_SIZE_PER_GPU=4
 THROUGHPUT_LOG_FREQ=2000
 
-cd /workspace/shared_workspace/tensorpack/mask-rcnn-tensorflow
+cd /workspace/shared_workspace/mask-rcnn-tensorflow
 
 mpirun -np ${NUM_GPU} \
 --H localhost:${NUM_GPU} \
@@ -23,7 +23,7 @@ mpirun -np ${NUM_GPU} \
 -x HOROVOD_FUSION_THRESHOLD=67108864 \
 -x TF_XLA_FLAGS=--tf_xla_auto_jit=-1 \
 --output-filename /workspace/shared_workspace/logs/mpirun_logs \
-python3 /workspace/shared_workspace/tensorpack/mask-rcnn-tensorflow/MaskRCNN/train.py \
+python3 /workspace/shared_workspace/mask-rcnn-tensorflow/MaskRCNN/train.py \
 --logdir /workspace/shared_workspace/logs/train_log \
 --fp16 \
 --throughput_log_freq ${THROUGHPUT_LOG_FREQ} \
@@ -42,8 +42,8 @@ TRAIN.RPN_NCHW=True \
 TRAIN.MASK_NCHW=True \
 RPN.TOPK_PER_IMAGE=True \
 PREPROC.PREDEFINED_PADDING=False \
-BACKBONE.WEIGHTS=/workspace/shared_workspace/data/coco/coco/pretrained-models/ImageNet-R50-AlignPadding.npz \
-BACKBONE.NORM=FreezeBN \
+BACKBONE.WEIGHTS=/workspace/shared_workspace/data/weights/ImageNet-R50-AlignPadding.npz \
+BACKBONE.NORM=SyncBN \
 TRAIN.WARMUP_INIT_LR=0.000416666666667 \
 FRCNN.BBOX_REG_WEIGHTS='[20., 20., 10., 10.]' \
 TRAINER=horovod

@@ -7,6 +7,7 @@ import re
 import multiprocessing as mp
 import numpy as np
 import tensorflow.compat.v1 as tf
+import tensorflow as tf2
 from abc import ABCMeta, abstractmethod
 import json
 import operator
@@ -367,7 +368,22 @@ class PeakMemoryTracker(Callback):
             for mem, dev in zip(results, self._devices):
                 self.trainer.monitors.put_scalar('PeakMemory(MB)' + dev, mem / 1e6)
 
-
+class PerformanceProfiler(Callback):
+    """
+    Runs the TF2 profiler
+    """
+    def __init__(self, log_dir, start_step=512, end_step=544):
+        self.log_dir = log_dir
+        os.makedirs(log_dir, exist_ok=True)
+        self.start_step = start_step
+        self.end_step = end_step
+        
+    def _trigger_step(self):
+        if self.global_step==self.start_step:
+            tf2.profiler.experimental.start(self.log_dir)
+        if self.global_step==self.end_step:
+            tf2.profiler.experimental.stop()
+                
 class GraphProfiler(Callback):
     """
     Enable profiling by installing session hooks,

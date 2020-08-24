@@ -12,7 +12,7 @@ from config import config as cfg
 from model_box import clip_boxes
 from utils.mixed_precision import mixed_precision_scope
 
-module = '/workspace/shared_workspace/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
+module = '/mask-rcnn-tensorflow/MaskRCNN/model/custom_ops/roi_align/roi_align_op.so'
 
 gen_custom_op = tf.load_op_library(module)
 
@@ -261,7 +261,7 @@ def generate_fpn_proposals_topk_per_image(multilevel_anchor_boxes,
     assert len(multilevel_label_logits) == num_lvl
     orig_images_hw = orig_image_dims[:, :2]
 
-    training = True # get_current_tower_context().is_training
+    training = get_current_tower_context().is_training
     all_boxes = []
     all_scores = []
     if cfg.FPN.PROPOSAL_MODE == 'Level':
