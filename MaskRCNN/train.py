@@ -307,20 +307,23 @@ if __name__ == '__main__':
 
 
         callbacks = [
-            PeriodicCallback(
-                ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
-                every_k_epochs=20),
             # linear warmup
             ScheduledHyperParamSetter(
                 'learning_rate', warmup_schedule, interp='linear', step_based=True),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
-            PeakMemoryTracker(),
             EstimatedTimeLeft(median=True),
             SessionRunTimeout(60000).set_chief_only(True),   # 1 minute timeout
         ]
+        
+        '''
+        PeriodicCallback(
+                ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
+                every_k_epochs=20),
+        PeakMemoryTracker(),
+        '''
 
         callbacks.extend([
-            EvalCallback(dataset, *MODEL.get_inference_tensor_names(), args.logdir, 1, async=args.async_eval) #cfg.TRAIN.BATCH_SIZE_PER_GPU)
+            EvalCallback(dataset, *MODEL.get_inference_tensor_names(), args.logdir, 1, a_sync=args.async_eval) #cfg.TRAIN.BATCH_SIZE_PER_GPU)
             for dataset in cfg.DATA.VAL
         ])
 
