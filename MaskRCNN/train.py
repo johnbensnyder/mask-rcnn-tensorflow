@@ -13,6 +13,7 @@ import six
 assert six.PY3, "FasterRCNN requires Python 3!"
 import tensorflow.compat.v1 as tf
 tf.disable_eager_execution()
+tf.config.optimizer.set_experimental_options({"auto_mixed_precision": True})
 import tqdm
 import time
 import subprocess

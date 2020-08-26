@@ -325,6 +325,24 @@ def UnPooling2x2ZeroFilled(x):
         ret = tf.reshape(out, tf.stack([-1, shv[1] * 2, shv[2] * 2, sh[3]]))
         return ret
 
+def nearest_upsampling(data, scale):
+    """Nearest neighbor upsampling implementation.
+    Args:
+      data: A tensor with a shape of [batch, height_in, width_in, channels].
+      scale: An integer multiple to scale resolution of input data.
+    Returns:
+      A tensor with a shape of [batch, height_in*scale, width_in*scale, channels].
+      Same dtype as input data.
+    """
+    with tf.name_scope('nearest_upsampling'):
+        bs, h, w, c = data.get_shape().as_list()
+        bs = -1 if bs is None else bs
+        # Use reshape to quickly upsample the input.  The nearest pixel is selected
+        # implicitly via broadcasting.
+        data = tf.reshape(data, [bs, h, 1, w, 1, c]) * tf.ones(
+            [1, 1, scale, 1, scale, 1], dtype=data.dtype)
+        return tf.reshape(data, [bs, h * scale, w * scale, c])    
+    
 @layer_register(log_shape=True)
 def FixedUnPooling(x, shape, unpool_mat=None, data_format='channels_last'):
     """

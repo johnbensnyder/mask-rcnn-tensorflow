@@ -117,10 +117,11 @@ def get_norm(zero_init=False):
         layer_name = 'bn'
 
     def norm(x):
-        dtype = x.dtype
-        x = tf.cast(x, tf.float32)
+        #dtype = x.dtype
+        #x = tf.cast(x, tf.float32)
         x = Norm(layer_name, x, gamma_initializer=tf.zeros_initializer() if zero_init else None)
-        return tf.cast(x, dtype)
+        #return tf.cast(x, dtype)
+        return x
 
     return norm
     #return lambda x: Norm(layer_name, x, gamma_initializer=tf.zeros_initializer() if zero_init else None)
@@ -149,11 +150,13 @@ def resnet_bottleneck(l, ch_out, stride, seed_gen):
     else:
         l = Conv2D('conv1', l, ch_out, 1, strides=1, seed=seed_gen.next())
         if stride == 2:
-            if cfg.TRAIN.BACKBONE_NCHW:
-                l = tf.pad(l, [[0, 0], [0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1)])
-            else:
-                l = tf.pad(l, [[0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1), [0, 0]])
-            l = Conv2D('conv2', l, ch_out, 3, strides=2, padding='VALID', seed=seed_gen.next())
+            #if cfg.TRAIN.BACKBONE_NCHW:
+            #    l = tf.pad(l, [[0, 0], [0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1)])
+            #else:
+            #    l = tf.pad(l, [[0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1), [0, 0]])
+            #l = Conv2D('conv2', l, ch_out, 3, strides=2, padding='VALID', seed=seed_gen.next())
+            # attempting to remove padding to avoid extra kernel calls
+            l = Conv2D('conv2', l, ch_out, 3, strides=2, padding='SAME', seed=seed_gen.next())
         else:
             l = Conv2D('conv2', l, ch_out, 3, strides=stride, seed=seed_gen.next())
     if cfg.BACKBONE.NORM != 'None':
@@ -177,10 +180,13 @@ def resnet_c4_backbone(image, num_blocks, seed_gen):
     assert len(num_blocks) == 3
     freeze_at = cfg.BACKBONE.FREEZE_AT
     with backbone_scope(freeze=freeze_at > 0):
-        l = tf.pad(image, [[0, 0], [0, 0], maybe_reverse_pad(2, 3), maybe_reverse_pad(2, 3)])
-        l = Conv2D('conv0', l, 64, 7, strides=2, padding='VALID')
-        l = tf.pad(l, [[0, 0], [0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1)])
-        l = MaxPooling('pool0', l, 3, strides=2, padding='VALID')
+        # l = tf.pad(image, [[0, 0], [0, 0], maybe_reverse_pad(2, 3), maybe_reverse_pad(2, 3)])
+        # l = Conv2D('conv0', l, 64, 7, strides=2, padding='VALID')
+        # l = tf.pad(l, [[0, 0], [0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1)])
+        # l = MaxPooling('pool0', l, 3, strides=2, padding='VALID')
+        # attempting to remove padding to avoid extra kernel calls
+        l = Conv2D('conv0', l, 64, 7, strides=2, padding='SAME')
+        l = MaxPooling('pool0', l, 3, strides=2, padding='SAME')
 
     with backbone_scope(freeze=freeze_at > 1):
         c2 = resnet_group('group0', l, resnet_bottleneck, 64, num_blocks[0], 1, seed_gen=seed_gen)
@@ -225,21 +231,25 @@ def resnet_fpn_backbone(image, num_blocks, seed_gen, fp16=False):
                 [[0, 0],
                 [0, 0],
                 [pad_base[0], pad_base[1] + pad_shape2d[0]],
-                [pad_base[0], pad_base[1] + pad_shape2d[1]]])) if cfg.TRAIN.BACKBONE_NCHW else tf.pad(image, tf.stack(
+                [pad_base[0], pad_base[1] + pad_shape2d[1]]])) \
+                if cfg.TRAIN.BACKBONE_NCHW else tf.pad(image, tf.stack(
                 [[0, 0],
                 [pad_base[0], pad_base[1] + pad_shape2d[0]],
                 [pad_base[0], pad_base[1] + pad_shape2d[1]],
                 [0, 0]]))
+            #l = image
             if cfg.TRAIN.BACKBONE_NCHW:
                 l.set_shape([None, chan, None, None])
             else:
                 l.set_shape([None, None, None, chan])
             l = Conv2D('conv0', l, 64, 7, strides=2, padding='VALID', seed=seed_gen.next())
-            if cfg.TRAIN.BACKBONE_NCHW:
-                l = tf.pad(l, [[0, 0], [0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1)])
-            else:
-                l = tf.pad(l, [[0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1), [0, 0]])
-            l = MaxPooling('pool0', l, 3, strides=2, padding='VALID')
+            # l = Conv2D('conv0', l, 64, 7, strides=2, padding='SAME', seed=seed_gen.next())
+            # if cfg.TRAIN.BACKBONE_NCHW:
+            #     l = tf.pad(l, [[0, 0], [0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1)])
+            # else:
+            #     l = tf.pad(l, [[0, 0], maybe_reverse_pad(0, 1), maybe_reverse_pad(0, 1), [0, 0]])
+            # l = MaxPooling('pool0', l, 3, strides=2, padding='VALID')
+            l = MaxPooling('pool0', l, 3, strides=2, padding='SAME')
         with backbone_scope(freeze=freeze_at > 1, data_format=data_format):
             c2 = resnet_group('group0', l, resnet_bottleneck, 64, num_blocks[0], 1, seed_gen=seed_gen)
         with backbone_scope(freeze=False, data_format=data_format):

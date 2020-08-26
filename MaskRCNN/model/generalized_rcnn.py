@@ -85,7 +85,7 @@ class DetectionModel(ModelDesc):
         #    opt = optimizer.AccumGradOptimizer(opt, 8 // cfg.TRAIN.NUM_GPUS)
         if cfg.TRAIN.GRADIENT_CLIP != 0:
             opt = GradientClipOptimizer(opt, cfg.TRAIN.GRADIENT_CLIP)
-        opt = tf.train.experimental.enable_mixed_precision_graph_rewrite(opt, loss_scale='dynamic')
+        #opt = tf.train.experimental.enable_mixed_precision_graph_rewrite(opt, loss_scale='dynamic')
         return opt
 
     def get_inference_tensor_names(self):

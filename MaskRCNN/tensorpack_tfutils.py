@@ -748,7 +748,14 @@ class SessionUpdate(object):
                     else:
                         assert vartype == val.dtype, msg
         try:
+            # this is very slow in TF 2 try assign
             var.load(val)
+            # TODO
+            # this should be the same behavior, but it's not
+            # need to find way to get this working because it's faster
+            # appears to load find, but model doesn't train, so doesn't
+            # appear to actually be loading
+            # var.assign(val) 
         except tf.errors.InvalidArgumentError:
             logger.exc("Cannot load this value to the variable {}".format(name))
 
